@@ -1,0 +1,131 @@
+#NO WSDL REQUEST
+
+<?php 
+$s = $_REQUEST["id"];
+$db = mysqli_connect("localhost", "root", "", "college_database");
+if($db){
+
+	$sql = "select id, name from subjects where id = $s";
+	$response = mysqli_query($db, $sql) or die("database error:". mysqli_error($db));	
+	
+	$n=mysqli_num_rows($response);
+	if ($n > 0){
+	
+		echo '
+                <div class="table-responsive">
+                <table class="table table bordered">
+                <tr>
+                <th>ID</th>
+                <th>Kolegij</th>
+                </tr>
+		    ';
+	while ($myrow=mysqli_fetch_row($response)){
+		 
+		echo '
+                <tr>
+                <td>'.$myrow["0"].'</td>
+                <td>'.$myrow["1"].'</td>
+                </tr>
+            ';
+			
+
+		}
+                
+	}
+        else {
+                echo 'Nema rezultata. ';
+        }
+}
+else {
+	echo "<br>Nije proslo spajanje<br>";
+	}
+
+
+?>
+
+#NO WSDL RESPONSE
+
+ID 	Kolegij
+2	Discrete Mathematics
+
+
+#WSDL REQUEST
+
+public class WebService1 : System.Web.Services.WebService
+    {
+
+	[WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+        [System.Web.Services.WebMethod]
+        public string getInfoStudentJson(int id)
+        {
+            string connString = "SERVER=localhost" + ";" +
+                "DATABASE=college_database;" +
+                "UID=root;" +
+                "PASSWORD=;";
+
+            MySqlConnection cnMySQL = new MySqlConnection(connString);
+
+            MySqlCommand cmdMySQL = cnMySQL.CreateCommand();
+
+            MySqlDataReader reader;
+
+            cmdMySQL.CommandText = "select * from students where roll_num=" + id;
+
+            cnMySQL.Open();
+
+            reader = cmdMySQL.ExecuteReader();
+
+            DataTable dt = new DataTable();
+            dt.Load(reader);
+
+
+            cnMySQL.Close();
+
+            return DataTableToJSONWithStringBuilder(dt);
+        }
+        [System.Web.Services.WebMethod]
+        public string DataTableToJSONWithStringBuilder(DataTable table)
+        {
+            var JSONString = new StringBuilder();
+            if (table.Rows.Count > 0)
+            {
+                JSONString.Append("[");
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    JSONString.Append("{");
+                    for (int j = 0; j < table.Columns.Count; j++)
+                    {
+                        if (j < table.Columns.Count - 1)
+                        {
+                            JSONString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\",");
+                        }
+                        else if (j == table.Columns.Count - 1)
+                        {
+                            JSONString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\"");
+                        }
+                    }
+                    if (i == table.Rows.Count - 1)
+                    {
+                        JSONString.Append("}");
+                    }
+                    else
+                    {
+                        JSONString.Append("},");
+                    }
+                }
+                JSONString.Append("]");
+            }
+            return JSONString.ToString();
+        }
+    }
+}
+
+#WSDL RESPONSE
+
+Broj indeksa	Ime		Prezime		Kontakt		Datum upisa
+180102		Sunanda		Somwase		9423165742	21.8.2017. 0:00:00
+
